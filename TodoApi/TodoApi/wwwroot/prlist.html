@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Список заказов</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.0/css/bootstrap.min.css" rel="stylesheet" />
+    
+</head>
+<body>
+        <h2>Список товаров</h2>
+        <table class="table table-condensed table-striped">
+            <thead><tr><th>ID</th><th>Название</th></tr></thead>
+            <tbody id="prlist">
+            </tbody>
+        </table>
+    <script>
+        async function GetProductsList() {
+            // отправляет запрос и получаем ответ
+            const response = await fetch("/api/Products", {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            // если запрос прошел нормально
+            if (response.ok === true) {
+                // получаем данные
+                const prodlist = await response.json();
+                let rows = document.getElementById("prlist");
+                prodlist.forEach(prodlist => {
+                    // добавляем полученные элементы в таблицу
+                    rows.append(row(prodlist));
+                });
+            }
+        }
+
+        function row(prodlist) {
+
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-rowid", prodlist.id);
+
+            const idTd = document.createElement("td");
+            idTd.append(prodlist.id);
+            tr.append(idTd);
+
+            const nameTd = document.createElement("td");
+            nameTd.append(prodlist.name);
+            tr.append(nameTd);
+
+
+            return tr;
+        }
+
+        GetProductsList();
+
+    </script>
+</body>
+</html>

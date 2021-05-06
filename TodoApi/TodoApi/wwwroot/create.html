@@ -1,0 +1,201 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Главная</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.0/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand disabled" href="#">Веб-сервис</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+                <a class="nav-item nav-link active" href="index.html">Главная <span class="sr-only">(current)</span></a>
+                <a class="nav-item nav-link" href="customers.html">Покупатели</a>
+                <a class="nav-item nav-link" href="products.html">Товары</a>
+                <a class="nav-item nav-link" href="orders.html">Заказы</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container" style="padding: 0; margin: 0; max-width: 100vw;">
+        <div class="row" style="position: relative;">
+            <div class="col-md-6">
+                <h2 style="padding-left: 20px">Заказ</h2>
+                <form name="ordcustForm" style="padding-left: 20px">
+                    <input type="hidden" name="id" value="0" />
+                    <div class="form-group col-md-5">
+                        <label for="customer_id">ID клиента</label>
+                        <input class="form-control" name="customer_id" type="number" />
+                    </div>
+                    <div class="col-md-5" style="margin-bottom: 20px;">
+                        <span>
+                            <script>
+                                var date = new Date();
+                                var d = date.getDate();
+                                var day = (d < 10) ? '0' + d : d;
+                                var m = date.getMonth() + 1;
+                                var month = (m < 10) ? '0' + m : m;
+                                var yy = date.getYear();
+                                var year = (yy < 1000) ? yy + 1900 : yy;
+
+                                document.write(day + ":" + month + ":" + year + " ");
+                            </script>
+                            <span id="clockdat"></span>
+                        </span>
+                    </div>
+                    <div class="panel-body">
+                        <button type="submit" id="submit" class="btn btn-primary">Создать</button>
+                        <button type="reset" id="reset" class="btn btn-primary">Сбросить</button>
+                    </div>
+                    <div style="margin: 20px 0">
+                        <p style="font-weight: bold;">После создания заказа, актоматически создается пустой лист товаров (ID Товара [0], Количество [0]).</p>
+                        <a class="btn btn-primary" href="edit.html">Перейти к редактированию</a>
+                    </div>
+                </form>
+                <div style="padding-left: 20px">
+                    <table class="table table-condensed table-striped">
+                        <thead><tr><th>ID заказа</th><th>ID клиента</th><th>ФИО</th><th>Дата</th><th></th></tr></thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6" style="width: 50%; position: absolute; right: 0; top: 0; bottom: 0; visibility: hidden;">
+                <div style="position: sticky; top: 0; visibility: visible;">
+                    <iframe src="framecustomers.html" frameborder="0" height="600" width="100%"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        setInterval(function () {
+            var cd = new Date();
+            var clockdat = document.getElementById("clockdat");
+            clockdat.innerHTML = cd.toLocaleTimeString();
+        }, 1000);
+        // Получение
+        async function GetOrderCustomers() {
+            // отправляет запрос и получаем ответ
+            const response = await fetch("/api/OrderCustomers", {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            // если запрос прошел нормально
+            if (response.ok === true) {
+                // получаем данные
+                const ordcust = await response.json();
+                let rows = document.querySelector("tbody");
+                ordcust.forEach(ordcust => {
+                    // добавляем полученные элементы в таблицу
+                    rows.append(row(ordcust));
+                });
+            }
+        }
+        // Добавление
+        async function CreateOrderCustomer(ordcustCustomer_id, ordcustDate) {
+            const response = await fetch("api/Orders", {
+                method: "POST",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    customer_id: ordcustCustomer_id,
+                    date: ordcustDate
+                })
+            });
+            if (response.ok === true) {
+                //const ordcust = await response.json();
+                //reset();
+                //document.querySelector("tbody").append(row(ordcust));
+                window.location.reload();
+            }
+        }
+        
+        // Удаление 
+        async function DeleteOrderCustomer(id) {
+            const response = await fetch("/api/Orders/" + id, {
+                method: "DELETE",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                //const ordcust = await response.json();
+                //document.querySelector("tr[data-rowid='" + ordcust.id + "']").remove();
+                window.location.reload();
+            }
+        }
+
+        
+        // создание строки для таблицы
+        function row(ordcust) {
+
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-rowid", ordcust.id);
+
+            const idTd = document.createElement("td");
+            idTd.append(ordcust.id);
+            tr.append(idTd);
+
+            const customer_idTd = document.createElement("td");
+            customer_idTd.append(ordcust.customer_id);
+            tr.append(customer_idTd);
+
+            const customer_nameTd = document.createElement("td");
+            customer_nameTd.append(ordcust.customer_name);
+            tr.append(customer_nameTd);
+
+            const dateTd = document.createElement("td");
+            dateTd.append(ordcust.date);
+            tr.append(dateTd);
+
+            const linksTd = document.createElement("td");
+
+
+            const removeLink = document.createElement("a");
+            removeLink.setAttribute("data-id", ordcust.id);
+            removeLink.setAttribute("style", "cursor:pointer;padding:15px;");
+            removeLink.append("Удалить");
+            removeLink.addEventListener("click", e => {
+
+                e.preventDefault();
+                DeleteOrderCustomer(ordcust.id);
+            });
+
+            linksTd.append(removeLink);
+            tr.appendChild(linksTd);
+
+            return tr;
+        }
+
+        // отправка формы
+        document.forms["ordcustForm"].addEventListener("submit", e => {
+            e.preventDefault();
+            const form = document.forms["ordcustForm"];
+            const id = form.elements["id"].value;
+            const customer_id = form.elements["customer_id"].value;
+            var time = new Date();
+            var d = time.getDate();
+            var day = (d < 10) ? '0' + d : d;
+            var m = time.getMonth() + 1;
+            var month = (m < 10) ? '0' + m : m;
+            var yy = time.getYear();
+            var year = (yy < 1000) ? yy + 1900 : yy;
+            var hh = time.getHours();
+            var hours = (hh < 10) ? '0' + hh : hh;
+            var mm = time.getMinutes()
+            var minutes = (mm < 10) ? '0' + mm : mm;
+            var ss = time.getSeconds()
+            var seconds = (ss < 10) ? '0' + ss : ss;
+            const date = year + "-" + month + "-" + day + "T" + hours + ":" + minutes + ":" + seconds;
+            if (id == 0)
+                CreateOrderCustomer(customer_id, date);
+        });
+
+        // загрузка
+        GetOrderCustomers();
+    </script>
+</body>
+</html>

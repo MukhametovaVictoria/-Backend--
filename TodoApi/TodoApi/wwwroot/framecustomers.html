@@ -1,0 +1,173 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Список покупателей</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.0/css/bootstrap.min.css" rel="stylesheet" />
+    
+</head>
+<body>
+    <h2 style="padding-left: 20px">Список покупателей</h2>
+    <form name="customerForm" style="padding-left: 20px">
+        <input type="hidden" name="id" value="0" />
+        <div class="form-group col-md-5">
+            <label for="name">ФИО:</label>
+            <input class="form-control" name="name" />
+        </div>
+        <div class="panel-body">
+            <button type="submit" id="submit" class="btn btn-primary">Сохранить</button>
+            <button type="reset" id="reset" class="btn btn-primary">Сбросить</button>
+        </div>
+    </form>
+    <div style="padding-left: 20px">
+        <table class="table table-condensed table-striped  col-md-6" >
+            <thead><tr><th>Id</th><th>Имя</th><th></th></tr></thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        // Получение 
+        async function GetCustomers() {
+            // отправляет запрос и получаем ответ
+            const response = await fetch("/api/Customers", {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            // если запрос прошел нормально
+            if (response.ok === true) {
+                // получаем данные
+                const customer = await response.json();
+                let rows = document.querySelector("tbody");
+                customer.forEach(customer => {
+                    // добавляем полученные элементы в таблицу
+                    rows.append(row(customer));
+                });
+            }
+        }
+        // Получение одного 
+        async function GetCustomer(id) {
+            const response = await fetch("/api/Customers/" + id, {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                const customer = await response.json();
+                const form = document.forms["customerForm"];
+                form.elements["id"].value = customer.id;
+                form.elements["name"].value = customer.name;
+            }
+        }
+        // Добавление 
+        async function CreateCustomer(customerName) {
+            const response = await fetch("api/Customers", {
+                method: "POST",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: customerName
+                })
+            });
+            if (response.ok === true) {
+                //const customer = await response.json();
+                //reset();
+                //document.querySelector("tbody").append(row(customer));
+                window.location.reload();
+            }
+        }
+        // Изменение 
+        async function EditCustomer(customerId, customerName) {
+            const response = await fetch(`api/Customers/${customerId}`, {
+                method: "PUT",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: parseInt(customerId, 10),
+                    name: customerName
+                })
+            });
+            if (response.ok === true) {
+                window.location.reload();
+                //const customer = await response.json();
+                //reset();
+                //document.querySelector("tr[data-rowid='" + customer.id + "']").replaceWith(row(customer));
+            }
+        }
+        // Удаление 
+        async function DeleteCustomer(id) {
+            const response = await fetch("/api/Customers/" + id, {
+                method: "DELETE",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                //const customer = await response.json();
+                //document.querySelector("tr[data-rowid='" + customer.id + "']").remove();
+                window.location.reload();
+            }
+        }
+
+        // создание строки для таблицы
+        function row(customer) {
+
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-rowid", customer.id);
+
+            const idTd = document.createElement("td");
+            idTd.append(customer.id);
+            tr.append(idTd);
+
+            const nameTd = document.createElement("td");
+            nameTd.append(customer.name);
+            tr.append(nameTd);
+
+            const linksTd = document.createElement("td");
+
+            const editLink = document.createElement("a");
+            editLink.setAttribute("data-id", customer.id);
+            editLink.setAttribute("style", "cursor:pointer;padding:15px;");
+            editLink.append("Изменить");
+            editLink.addEventListener("click", e => {
+
+                e.preventDefault();
+                GetCustomer(customer.id);
+            });
+            linksTd.append(editLink);
+
+            const removeLink = document.createElement("a");
+            removeLink.setAttribute("data-id", customer.id);
+            removeLink.setAttribute("style", "cursor:pointer;padding:15px;");
+            removeLink.append("Удалить");
+            removeLink.addEventListener("click", e => {
+
+                e.preventDefault();
+                DeleteCustomer(customer.id);
+            });
+
+            linksTd.append(removeLink);
+            tr.appendChild(linksTd);
+
+            return tr;
+        }
+        // сброс значений формы
+        document.getElementById("reset").click(function (e) {
+
+            e.preventDefault();
+            reset();
+        })
+
+        // отправка формы
+        document.forms["customerForm"].addEventListener("submit", e => {
+            e.preventDefault();
+            const form = document.forms["customerForm"];
+            const id = form.elements["id"].value;
+            const name = form.elements["name"].value;
+            if (id == 0)
+                CreateCustomer(name);
+            else
+                EditCustomer(id, name);
+        });
+
+        // загрузка 
+        GetCustomers();
+    </script>
+</body>
+</html>
